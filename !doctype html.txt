@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>Всплывающее окно</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; padding: 0; height: 100vh; display: flex; align-items: center; justify-content: center; background: #f0f0f0; }
+
+    /* Ссылка-триггер */
+    .trigger {
+      display: inline-block;
+      padding: 8px 12px;
+      background: #e8e8e8;
+      border-radius: 6px;
+      text-decoration: none;
+      color: #333;
+      border: 1px solid #ccc;
+      cursor: pointer;
+    }
+
+    .overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.4);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    /* Первый модал (розовый) */
+    .modal {
+      width: min(90vw, 600px);
+      background: #ffb6d9;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Белый прямоугольник внутри окна — два абзаца */
+    .card {
+      position: absolute;
+      top: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 80%;
+      height: 130px;
+      background: #fff;
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: #e60000;
+      font-weight: 400;
+      z-index: 1;
+      text-align: center;
+    }
+
+    .paragraph {
+      width: 100%;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+    }
+    .paragraph.p1 { font-weight: 700; line-height: 1.2; }
+    .paragraph.p2 { font-weight: 500; line-height: 1.2; margin-top: 2px; }
+
+    /* Красный текст поверх прямоугольника */
+    .primaryCaption {
+      position: absolute;
+      top: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 2;
+      font-size: 24px;
+      color: #e00000;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    .subtitle {
+      position: absolute;
+      top: 210px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      text-align: center;
+      color: #e00000;
+      font-weight: 700;
+      z-index: 1;
+    }
+
+    .buttons { display: flex; gap: 12px; justify-content: center; margin-top: 180px; }
+
+    .btn { border: none; border-radius: 6px; padding: 12px 22px; font-size: 16px; color: #fff; cursor: pointer; }
+
+    .btn-no { background: #4bb6e6; }
+    .btn-yes { background: #ff4fb8; }
+
+    .overlay.secondary { display: none; }
+
+    /* Второе окно (персикового цвета) */
+    .overlay.secondary.active { display: flex; }
+    .modal.secondary { background: #ffd2a8; width: min(90vw, 480px); color: #8a2f2f; text-align: center; padding: 20px; border-radius: 12px; }
+
+    .hearts { font-size: 28px; margin: 8px 0; }
+
+    .valent { display: inline-block; background: #fff; color: #e11; padding: 8px 14px; border-radius: 6px; font-weight: bold; margin-top: 6px; }
+  </style>
+</head>
+<body>
+
+  <!-- Ссылка-триггер -->
+  <a class="trigger" id="openTrigger" href="#">тебе, Зай</a>
+
+  <div class="overlay" id="overlay1" aria-hidden="true">
+    <div class="modal" role="dialog" aria-label="Первое окно">
+      <div class="primaryCaption" id="primaryCaption">для самого любимого зайчика!)</div>
+
+      <div class="card" id="cardContent" aria-label="Белый прямоугольник с текстом">
+        <p class="paragraph p1">для самого любимого зайчика!)</p>
+        <p class="paragraph p2">ты любишь меня?</p>
+      </div>
+
+      <div class="buttons" style="margin-top: 180px;">
+        <button class="btn btn-no" id="btnNo">нет</button>
+        <button class="btn btn-yes" id="btnYes">да</button>
+      </div>
+
+      <div class="subtitle" id="subtitleText" aria-live="polite" style="top: 270px;">
+        ниже этой подписи можно разместить дополнительные фразы
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay secondary" id="overlay2" aria-hidden="true">
+    <div class="modal secondary" role="dialog" aria-label="Персиковое окно">
+      <div style="font-size:18px; padding:12px;">
+        ещё бы, по другому никак)
+      </div>
+      <div class="hearts" aria-label="Сердечки">💖 💖</div>
+      <div class="valent" style="margin: 8px auto 12px;">будешь моей валентинкой?</div>
+    </div>
+  </div>
+
+  <script>
+    const openTrigger = document.getElementById('openTrigger');
+    const overlay1 = document.getElementById('overlay1');
+    const btnNo = document.getElementById('btnNo');
+    const btnYes = document.getElementById('btnYes');
+    const overlay2 = document.getElementById('overlay2');
+
+    let noCount = 0;
+    const maxNo = 10;
+
+    // Открыть первое окно по клику на ссылку
+    openTrigger.addEventListener('click', (e) => {
+      e.preventDefault();
+      overlay1.style.display = 'flex';
+      overlay1.setAttribute('aria-hidden', 'false');
+    });
+
+    function updateTextOnNo(index) {
+      const phrases = [
+        "ты лучше подумай",
+        "промахнулся",
+        "не смешно",
+        "не сюда",
+        "Ало куда жмём",
+        "не сюда!!!",
+        "да как так-то",
+        "кудааааа",
+      ];
+      const idx = Math.min(index - 1, phrases.length - 1);
+      btnNo.textContent = phrases[idx];
+    }
+
+    btnNo.addEventListener('click', () => {
+      noCount++;
+      updateTextOnNo(noCount);
+      if (noCount >= maxNo) {
+        btnNo.style.display = 'none';
+      }
+    });
+
+    btnYes.addEventListener('click', () => {
+      overlay2.style.display = 'flex';
+      overlay2.setAttribute('aria-hidden', 'false');
+    });
+
+    overlay1.addEventListener('click', (e) => {
+      if (e.target === overlay1) {
+        overlay1.style.display = 'none';
+        overlay1.setAttribute('aria-hidden', 'true');
+      }
+    });
+
+    overlay2.addEventListener('click', (e) => {
+      if (e.target === overlay2) {
+        overlay2.style.display = 'none';
+        overlay2.setAttribute('aria-hidden', 'true');
+      }
+    });
+  </script>
+</body>
+</html>
